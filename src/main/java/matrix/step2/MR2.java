@@ -1,4 +1,4 @@
-package matrix.step1;
+package matrix.step2;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -8,24 +8,29 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
-public class MR1 {
-    private static String inPath = "./input_matrix/matrix2.txt";
-    private static String outPath = "./output_matrix_step1/";
+public class MR2 {
+    private static String inPath = "./input_matrix/matrix1.txt";
+    private static String outPath = "./output_matrix_step2/";
+    // 将step1的转置路径作为全局缓存
+    private static String cache = "./output_matrix_step1/";
 
-    public static int run() {
-
-        Configuration conf = new Configuration();
-        Job job = null;
+    public int run() {
         try {
-            job = Job.getInstance(conf, "Matrix multiply Step1");
+            Configuration conf = new Configuration();
+            Job job = Job.getInstance(conf, "Matrix multiply Step2");
 
-            job.setJarByClass(MR1.class);
+            // add distrubited cached file
+            job.addCacheArchive(new URI(cache + "#matrix2"));
+
+            job.setJarByClass(MR2.class);
 
             // set job Mapper class and Reducer class
-            job.setMapperClass(Mapper1.class);
-            job.setCombinerClass(Reducer1.class);
-            job.setReducerClass(Reducer1.class);
+            job.setMapperClass(Mapper2.class);
+            job.setCombinerClass(Reducer2.class);
+            job.setReducerClass(Reducer2.class);
 
             // set Mapper output type
             job.setMapOutputKeyClass(Text.class);
@@ -49,17 +54,20 @@ public class MR1 {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
         }
         return -1;
     }
 
     public static void main(String[] args) {
-        int result = -1;
-        result = new MR1().run();
+        int result = 0;
+        result = new MR2().run();
         if (result == 1) {
-            System.out.println("step1 run successfully...");
+            System.out.println("Step 2 run successfully...");
         } else if (result == -1) {
-            System.out.println("step1 failed...");
+            System.out.println("Step2 failed...");
         }
     }
 }
+
